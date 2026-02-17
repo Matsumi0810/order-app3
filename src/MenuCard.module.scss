@@ -1,150 +1,160 @@
-.menuContainer {
-  padding: 20px;
-  max-width: 800px;
-  margin: 0 auto;
-}
+import { useState, useEffect } from "react";
+import {
+  collection,
+  query,
+  onSnapshot,
+  orderBy,
+  doc,
+  writeBatch,
+} from "firebase/firestore";
+import { db } from "./firebase";
+import styles from "./OrderList.module.scss";
 
-/* ポップアップ（モーダル）のオーバーレイ */
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.6); // 画面を暗くする
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 2000;
-}
+function OrderList() {
+  const [orders, setOrders] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [now, setNow] = useState(new Date());
 
-.modal {
-  background: white;
-  padding: 30px;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 350px;
-  text-align: center;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  .modalText {
-    font-size: 1.1rem;
-    margin-bottom: 25px;
-    color: #333;
-    strong { color: #e91e63; }
-  }
+  useEffect(() => {
+    const q = query(collection(db, "orders"), orderBy("createdAt", "asc"));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const orderArray = [];
+      querySnapshot.forEach((doc) => {
+        orderArray.push({ id: doc.id, ...doc.data() });
+      });
+      setOrders(orderArray);
+    });
+    return () => unsubscribe();
+  }, []);
 
-  .modalButtons {
-    display: flex;
-    flex-direction: column; // ボタンを縦に並べる
-    gap: 12px;
-
-    button {
-      padding: 14px;
-      border-radius: 8px;
-      border: none;
-      cursor: pointer;
-      font-weight: bold;
-      font-size: 1rem;
+  const handleCompleteGroup = async (orderIds) => {
+    try {
+      const batch = writeBatch(db);
+      orderIds.forEach((id) => {
+        const ref = doc(db, "orders", id);
+        batch.update(ref, { status: "done" });
+      });
+      await batch.commit();
+    } catch (e) {
+      console.error(e);
     }
+  };
 
-    .continueButton {
-      background: #f0f0f0;
-      color: #333;
-    }
+  const formatTime = (timestamp) => {
+    if (!timestamp) return "--:--";
+    const date = timestamp.toDate();
+    return date.toLocaleTimeString("ja-JP", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
-    .directSubmitButton {
-      background: #4caf50;
-      color: white;
-      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
-    }
-  }
+  const getElapsedTimeInfo = (timestamp) => {
+    if (!timestamp) return { text: "0分0秒", isUrgent: false };
+    const startTime = timestamp.toDate();
+    const diffInSec = Math.floor((now - startTime) / 1000);
+    const minutes = Math.floor(diffInSec / 60);
+    const seconds = diffInSec % 60;
+    
+    return {
+      text: `${minutes}分${seconds}秒`,
+      isUrgent: minutes >= 10, // 10分以上でフラグを立てる
+    };
+  };
+
+  const cookingOrdersByTable = orders
+    .filter((order) => order.status === "cooking")
+    .reduce((groups, order) => {
+      const table = order.tableNo || "不明";
+      if (!groups[table]) {
+        groups[table] = {
+          items: {},
+          firstOrderTime: order.createdAt,
+        };
+      }
+      if (!groups[table].items[order.itemName]) {
+        groups[table].items[order.itemName] = { ids: [], count: 0 };
+      }
+      groups[table].items[order.itemName].ids.push(order.id);
+      groups[table].items[order.itemName].count += 1;
+      return groups;
+    }, {});
+
+  const doneOrders = orders.filter((order) => order.status === "done").reverse();
+  const displayOrders = isExpanded ? doneOrders : doneOrders.slice(0, 5);
+
+  return (
+    <div className={styles.container}>
+      <h2 className={styles.sectionTitle}>🔥 調理待ち（テーブル別）</h2>
+      <div className={styles.tableGrid}>
+        {Object.keys(cookingOrdersByTable).map((tableNo) => {
+          const timeInfo = getElapsedTimeInfo(cookingOrdersByTable[tableNo].firstOrderTime);
+          
+          return (
+            <div key={tableNo} className={styles.tableCard}>
+              <h3 className={styles.tableHeader}>{tableNo} 番テーブル</h3>
+              
+              <div className={styles.itemTableHeader}>
+                <span>商品名</span>
+                <span>個数</span>
+                <span>操作</span>
+              </div>
+
+              <ul className={styles.itemList}>
+                {Object.keys(cookingOrdersByTable[tableNo].items).map((itemName) => (
+                  <li key={itemName} className={styles.itemRow}>
+                    <span className={styles.itemName}>{itemName}</span>
+                    <span className={styles.itemCount}>
+                      {cookingOrdersByTable[tableNo].items[itemName].count}
+                    </span>
+                    <button
+                      className={styles.miniDoneButton}
+                      onClick={() => handleCompleteGroup(cookingOrdersByTable[tableNo].items[itemName].ids)}
+                    >
+                      完了
+                    </button>
+                  </li>
+                ))}
+              </ul>
+
+              <div className={styles.orderFooter}>
+                <span className={styles.orderTime}>
+                  時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
+                </span>
+                <span className={timeInfo.isUrgent ? styles.urgentTime : styles.elapsedTime}>
+                  経過: {timeInfo.text}
+                </span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
+      <ul className={styles.historyList}>
+        {displayOrders.map((order) => (
+          <li key={order.id} className={styles.historyItem}>
+            <span className={styles.historyTable}>{order.tableNo}</span>
+            <span className={styles.historyName}>{order.itemName}</span>
+            <span className={styles.historyTime}>{formatTime(order.createdAt)}</span>
+          </li>
+        ))}
+      </ul>
+
+      {doneOrders.length > 5 && (
+        <button className={styles.expandButton} onClick={() => setIsExpanded(!isExpanded)}>
+          {isExpanded ? "閉じる ▲" : `もっと見る (${doneOrders.length - 5}件) ＋`}
+        </button>
+      )}
+    </div>
+  );
 }
 
-@keyframes popIn {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-/* メニューカード */
-.menuGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 15px;
-  margin-bottom: 50px;
-}
-
-.menuCard {
-  background: white;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  text-align: center;
-  .itemName { font-size: 1.1rem; margin-bottom: 5px; }
-  .itemPrice { color: #e91e63; font-weight: bold; margin-bottom: 10px; }
-}
-
-.counter {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 15px;
-  button {
-    width: 35px;
-    height: 35px;
-    border-radius: 50%;
-    border: 1px solid #ddd;
-    background: white;
-    font-size: 1.2rem;
-    cursor: pointer;
-  }
-  span { font-size: 1.2rem; font-weight: bold; }
-}
-
-.orderButton {
-  width: 100%;
-  padding: 12px;
-  background: #2196f3;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  font-weight: bold;
-}
-
-/* カートセクション */
-.cartSection {
-  background: #fff;
-  padding: 20px;
-  border-radius: 15px;
-  border: 1px solid #eee;
-  margin-top: 20px;
-}
-
-.cartList { list-style: none; padding: 0; margin-bottom: 20px; }
-.cartItem {
-  display: flex;
-  justify-content: space-between;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.deleteButton {
-  background: #ff5252;
-  color: white;
-  border: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.submitOrderButton {
-  width: 100%;
-  padding: 15px;
-  background: #4caf50;
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-size: 1.1rem;
-  font-weight: bold;
-}
+export default OrderList;
