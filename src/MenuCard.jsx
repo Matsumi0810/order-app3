@@ -130,26 +130,30 @@ function MenuCard({ tableNo }) {
       <div className={styles.cartSection}>
         <h2 className={styles.cartTitle}>現在のカート内容</h2>
         {cart.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#999" }}>カートは空です</p>
+          <p style={{ textAlign: "center", color: "#999", padding: "20px" }}>カートは空です</p>
         ) : (
           <>
             <div className={styles.cartHeader}>
-              <span>商品名</span>
-              <span>数量</span>
-              <span>金額</span>
-              <span>操作</span>
+              <span className={styles.headName}>商品名</span>
+              <span className={styles.headQty}>数量</span>
+              <span className={styles.headPrice}>金額</span>
+              <span className={styles.headAction}>操作</span>
             </div>
             <ul className={styles.cartList}>
               {Object.values(groupedCart).map((item) => (
                 <li key={item.name} className={styles.cartItem}>
-                  <span className={styles.cartItemName}>{item.name}</span>
-                  <div className={styles.cartCounter}>
-                    <button onClick={() => updateCartItemCount(item.name, -1)}>−</button>
-                    <span>{item.count}</span>
-                    <button onClick={() => updateCartItemCount(item.name, 1)}>+</button>
+                  <div className={styles.cartItemMain}>
+                    <span className={styles.cartItemName}>{item.name}</span>
                   </div>
-                  <span className={styles.cartItemSubtotal}>{item.subtotal.toLocaleString()}円</span>
-                  <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>消す</button>
+                  <div className={styles.cartItemSub}>
+                    <div className={styles.cartCounter}>
+                      <button onClick={() => updateCartItemCount(item.name, -1)}>−</button>
+                      <span className={styles.countNum}>{item.count}</span>
+                      <button onClick={() => updateCartItemCount(item.name, 1)}>+</button>
+                    </div>
+                    <span className={styles.cartItemSubtotal}>{item.subtotal.toLocaleString()}円</span>
+                    <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>消す</button>
+                  </div>
                 </li>
               ))}
             </ul>
