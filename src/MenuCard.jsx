@@ -10,13 +10,10 @@ const menuItems = [
   { id: 4, name: "パンケーキ", price: 900 },
 ];
 
-function MenuCard() {
+function MenuCard({ tableNo }) {
   const [cart, setCart] = useState([]);
 
-  // カートに追加
   const addToCart = (item) => {
-    // Math.random().toString(36) でランダムな文字列を作り、
-    // .slice(2) で「0.」の部分を切り落としています。
     const randomStr = Math.random().toString(36).slice(2);
     const uniqueId = `${Date.now()}-${randomStr}`;
 
@@ -27,12 +24,10 @@ function MenuCard() {
     setCart([...cart, cartItem]);
   };
 
-  // カートから削除
   const removeFromCart = (cartId) => {
     setCart(cart.filter((item) => item.cartId !== cartId));
   };
 
-  // 注文確定（Firebaseへ送信）
   const submitOrder = async () => {
     if (cart.length === 0) return;
 
@@ -42,7 +37,7 @@ function MenuCard() {
           itemName: item.name,
           price: item.price,
           status: "cooking",
-          tableNo: "tableNo",
+          tableNo: tableNo,
           createdAt: serverTimestamp(),
         }),
       );
@@ -57,7 +52,6 @@ function MenuCard() {
     }
   };
 
-  // 合計金額
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
