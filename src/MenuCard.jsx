@@ -33,8 +33,25 @@ function MenuCard({ tableNo }) {
       newItems.push({ ...item, cartId: uniqueId });
     }
     setCart([...cart, ...newItems]);
-    setIsSuccess(false); // 新しく追加したら成功表示をリセット
+    setIsSuccess(false);
     setModal({ show: true, itemName: `${item.name} x ${count}` });
+  };
+
+  const updateCartItemCount = (itemName, delta) => {
+    if (delta > 0) {
+      const itemToClone = cart.find((item) => item.name === itemName);
+      if (itemToClone) {
+        const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        setCart([...cart, { ...itemToClone, cartId: uniqueId }]);
+      }
+    } else {
+      const indexToRemove = cart.findLastIndex((item) => item.name === itemName);
+      if (indexToRemove !== -1) {
+        const newCart = [...cart];
+        newCart.splice(indexToRemove, 1);
+        setCart(newCart);
+      }
+    }
   };
 
   const removeFromCart = (itemName) => {
@@ -58,9 +75,9 @@ function MenuCard({ tableNo }) {
       await Promise.all(promises);
       
       setCart([]);
+      setCounts({ 1: 1, 2: 1, 3: 1, 4: 1 });
       setIsSuccess(true);
       
-      // 2秒後にモーダルを閉じる
       setTimeout(() => {
         setModal({ show: false, itemName: "" });
         setIsSuccess(false);
@@ -68,7 +85,6 @@ function MenuCard({ tableNo }) {
 
     } catch (e) {
       console.error("Firebase送信エラー: ", e);
-      alert("送信に失敗しました。");
     } finally {
       setIsSubmitting(false);
     }
@@ -150,7 +166,11 @@ function MenuCard({ tableNo }) {
               {Object.values(groupedCart).map((item) => (
                 <li key={item.name} className={styles.cartItem}>
                   <span className={styles.cartItemName}>{item.name}</span>
-                  <span className={styles.cartItemCount}>x {item.count}</span>
+                  <div className={styles.cartCounter}>
+                    <button onClick={() => updateCartItemCount(item.name, -1)}>−</button>
+                    <span>{item.count}</span>
+                    <button onClick={() => updateCartItemCount(item.name, 1)}>+</button>
+                  </div>
                   <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>消す</button>
                 </li>
               ))}
