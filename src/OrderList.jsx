@@ -62,10 +62,9 @@ function OrderList() {
     const diffInSec = Math.floor((now - startTime) / 1000);
     const minutes = Math.floor(diffInSec / 60);
     const seconds = diffInSec % 60;
-    
     return {
       text: `${minutes}分${seconds}秒`,
-      isUrgent: minutes >= 10, // 10分以上でフラグを立てる
+      isUrgent: minutes >= 10,
     };
   };
 
@@ -96,17 +95,14 @@ function OrderList() {
       <div className={styles.tableGrid}>
         {Object.keys(cookingOrdersByTable).map((tableNo) => {
           const timeInfo = getElapsedTimeInfo(cookingOrdersByTable[tableNo].firstOrderTime);
-          
           return (
             <div key={tableNo} className={styles.tableCard}>
               <h3 className={styles.tableHeader}>{tableNo} 番テーブル</h3>
-              
               <div className={styles.itemTableHeader}>
                 <span>商品名</span>
                 <span>個数</span>
                 <span>操作</span>
               </div>
-
               <ul className={styles.itemList}>
                 {Object.keys(cookingOrdersByTable[tableNo].items).map((itemName) => (
                   <li key={itemName} className={styles.itemRow}>
@@ -123,7 +119,6 @@ function OrderList() {
                   </li>
                 ))}
               </ul>
-
               <div className={styles.orderFooter}>
                 <span className={styles.orderTime}>
                   時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
@@ -138,15 +133,24 @@ function OrderList() {
       </div>
 
       <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
-      <ul className={styles.historyList}>
-        {displayOrders.map((order) => (
-          <li key={order.id} className={styles.historyItem}>
-            <span className={styles.historyTable}>{order.tableNo}</span>
-            <span className={styles.historyName}>{order.itemName}</span>
-            <span className={styles.historyTime}>{formatTime(order.createdAt)}</span>
-          </li>
-        ))}
-      </ul>
+      <div className={styles.historyWrapper}>
+        <div className={styles.historyHeader}>
+          <span>テーブル</span>
+          <span>商品名</span>
+          <span>個数</span>
+          <span>時間</span>
+        </div>
+        <ul className={styles.historyList}>
+          {displayOrders.map((order) => (
+            <li key={order.id} className={styles.historyItem}>
+              <span className={styles.historyTable}>{order.tableNo}</span>
+              <span className={styles.historyName}>{order.itemName}</span>
+              <span className={styles.historyCount}>1</span>
+              <span className={styles.historyTime}>{formatTime(order.createdAt)}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
 
       {doneOrders.length > 5 && (
         <button className={styles.expandButton} onClick={() => setIsExpanded(!isExpanded)}>
