@@ -1,5 +1,5 @@
 .container {
-  padding: 10px; 
+  padding: 10px;
   background-color: #f0f2f5;
   min-height: 100vh;
 }
@@ -37,10 +37,9 @@
   text-align: center;
 }
 
-
 .itemTableHeader {
   display: grid;
-  grid-template-columns: 2fr 40px 60px; 
+  grid-template-columns: 2fr 40px 60px;
   gap: 10px;
   font-size: 0.75rem;
   font-weight: bold;
@@ -58,10 +57,10 @@
 
 .itemRow {
   display: grid;
-  grid-template-columns: 2fr 40px 60px; 
+  grid-template-columns: 2fr 40px 60px;
   gap: 10px;
   align-items: center;
-  padding: 10px 0;
+  padding: 12px 0;
   border-bottom: 1px solid #fafafa;
   text-align: center;
 
@@ -70,7 +69,7 @@
     font-weight: bold;
     font-size: 0.95rem;
     overflow: hidden;
-    text-overflow: ellipsis; // 長い名前が切れるように
+    text-overflow: ellipsis;
     white-space: nowrap;
   }
 
@@ -89,6 +88,8 @@
     border-radius: 6px;
     font-size: 0.75rem;
     font-weight: bold;
+    cursor: pointer;
+    &:hover { background-color: #45a049; }
   }
 }
 
@@ -113,9 +114,24 @@
     padding: 3px 8px;
     border-radius: 4px;
   }
+
+  .urgentTime {
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #fff;
+    background: #ff5252;
+    padding: 3px 8px;
+    border-radius: 4px;
+    animation: blink 1s infinite;
+  }
 }
 
-/* 完了履歴のリスト調整 */
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
 .historyList {
   background: #fff;
   padding: 10px;
@@ -125,7 +141,7 @@
 
 .historyItem {
   display: grid;
-  grid-template-columns: 80px 1fr 50px; 
+  grid-template-columns: 80px 1fr 50px;
   font-size: 0.85rem;
   color: #555;
   border-bottom: 1px solid #eee;
@@ -147,4 +163,5 @@
   border-radius: 25px;
   font-size: 0.9rem;
   color: #666;
+  cursor: pointer;
 }
