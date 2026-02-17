@@ -132,26 +132,52 @@
   100% { opacity: 1; }
 }
 
+/* 完了履歴セクションの改善 */
 .historyList {
   background: #fff;
-  padding: 10px;
+  padding: 0 10px;
   border-radius: 10px;
   list-style: none;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
 }
 
 .historyItem {
   display: grid;
-  grid-template-columns: 80px 1fr 50px;
+  /* 比率: テーブル(2.5) : 商品(5) : 時間(2.5) で固定 */
+  grid-template-columns: 2.5fr 5fr 2.5fr;
+  gap: 5px;
+  align-items: center;
   font-size: 0.85rem;
   color: #555;
   border-bottom: 1px solid #eee;
-  padding: 10px 0;
+  padding: 12px 0;
   
   &:last-child { border-bottom: none; }
 
-  .historyTable { color: #888; }
-  .historyName { font-weight: bold; }
-  .historyTime { color: #aaa; text-align: right; }
+  .historyTable {
+    color: #888;
+    font-size: 0.75rem;
+    text-align: left;
+    /* 長い文字列を省略 */
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .historyName {
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .historyTime {
+    color: #aaa;
+    text-align: right;
+    font-size: 0.8rem;
+  }
 }
 
 .expandButton {
