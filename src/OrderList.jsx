@@ -135,18 +135,24 @@ function OrderList() {
       <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
       <div className={styles.historyWrapper}>
         <div className={styles.historyHeader}>
-          <span>テーブル</span>
-          <span>商品名</span>
-          <span>個数</span>
-          <span>時間</span>
+          <span className={styles.headTable}>テーブル</span>
+          <span className={styles.headName}>商品名</span>
+          <span className={styles.headCount}>個数</span>
+          <span className={styles.headTime}>時間</span>
         </div>
         <ul className={styles.historyList}>
           {displayOrders.map((order) => (
             <li key={order.id} className={styles.historyItem}>
-              <span className={styles.historyTable}>{order.tableNo}</span>
-              <span className={styles.historyName}>{order.itemName}</span>
-              <span className={styles.historyCount}>1</span>
-              <span className={styles.historyTime}>{formatTime(order.createdAt)}</span>
+              {/* 商品名を独立させて、一行使えるようにしたよ */}
+              <div className={styles.historyItemMain}>
+                <span className={styles.historyName}>{order.itemName}</span>
+              </div>
+              {/* テーブル名や時間は下の段にまとめる */}
+              <div className={styles.historyItemSub}>
+                <span className={styles.historyTable}>{order.tableNo}</span>
+                <span className={styles.historyCount}>{order.count || 1}個</span>
+                <span className={styles.historyTime}>{formatTime(order.createdAt)}</span>
+              </div>
             </li>
           ))}
         </ul>
