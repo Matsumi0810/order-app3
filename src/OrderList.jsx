@@ -86,8 +86,34 @@ function OrderList() {
       return groups;
     }, {});
 
-  const doneOrders = orders.filter((order) => order.status === "done").reverse();
-  const displayOrders = isExpanded ? doneOrders : doneOrders.slice(0, 5);
+  const doneOrdersGrouped = orders
+    .filter((order) => order.status === "done")
+    .reduce((groups, order) => {
+      const timeStr = formatTime(order.createdAt);
+      const table = order.tableNo || "不明";
+      const groupKey = `${table}-${timeStr}`;
+
+      if (!groups[groupKey]) {
+        groups[groupKey] = {
+          tableNo: table,
+          time: timeStr,
+          items: {},
+          rawTime: order.createdAt ? order.createdAt.toDate() : new Date(0),
+        };
+      }
+
+      if (!groups[groupKey].items[order.itemName]) {
+        groups[groupKey].items[order.itemName] = 0;
+      }
+      groups[groupKey].items[order.itemName] += 1;
+      return groups;
+    }, {});
+
+  const sortedDoneGroups = Object.values(doneOrdersGrouped).sort(
+    (a, b) => b.rawTime - a.rawTime
+  );
+
+  const displayHistory = isExpanded ? sortedDoneGroups : sortedDoneGroups.slice(0, 4);
 
   return (
     <div className={styles.container}>
@@ -133,34 +159,28 @@ function OrderList() {
       </div>
 
       <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
-      <div className={styles.historyWrapper}>
-        <div className={styles.historyHeader}>
-          <span className={styles.headTable}>テーブル</span>
-          <span className={styles.headName}>商品名</span>
-          <span className={styles.headCount}>個数</span>
-          <span className={styles.headTime}>時間</span>
-        </div>
-        <ul className={styles.historyList}>
-          {displayOrders.map((order) => (
-            <li key={order.id} className={styles.historyItem}>
-              {/* 商品名を独立させて、一行使えるようにしたよ */}
-              <div className={styles.historyItemMain}>
-                <span className={styles.historyName}>{order.itemName}</span>
-              </div>
-              {/* テーブル名や時間は下の段にまとめる */}
-              <div className={styles.historyItemSub}>
-                <span className={styles.historyTable}>{order.tableNo}</span>
-                <span className={styles.historyCount}>{order.count || 1}個</span>
-                <span className={styles.historyTime}>{formatTime(order.createdAt)}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
+      <div className={styles.historyGrid}>
+        {displayHistory.map((group, index) => (
+          <div key={index} className={styles.historyCard}>
+            <div className={styles.historyCardHeader}>
+              <span className={styles.historyTableNo}>{group.tableNo}</span>
+              <span className={styles.historyTimeBadge}>{group.time}</span>
+            </div>
+            <ul className={styles.historyItemList}>
+              {Object.entries(group.items).map(([name, count]) => (
+                <li key={name} className={styles.historyItemRow}>
+                  <span className={styles.historyItemName}>{name}</span>
+                  <span className={styles.historyItemCount}>{count}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </div>
 
-      {doneOrders.length > 5 && (
+      {sortedDoneGroups.length > 4 && (
         <button className={styles.expandButton} onClick={() => setIsExpanded(!isExpanded)}>
-          {isExpanded ? "閉じる ▲" : `もっと見る (${doneOrders.length - 5}件) ＋`}
+          {isExpanded ? "閉じる ▲" : `もっと見る (${sortedDoneGroups.length - 4}件) ＋`}
         </button>
       )}
     </div>
