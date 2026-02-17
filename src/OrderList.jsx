@@ -56,14 +56,17 @@ function OrderList() {
     });
   };
 
-  const getElapsedTime = (timestamp) => {
-    if (!timestamp) return "0分0秒";
+  const getElapsedTimeInfo = (timestamp) => {
+    if (!timestamp) return { text: "0分0秒", isUrgent: false };
     const startTime = timestamp.toDate();
-    const diffInMs = now - startTime;
-    const diffInSec = Math.floor(diffInMs / 1000);
+    const diffInSec = Math.floor((now - startTime) / 1000);
     const minutes = Math.floor(diffInSec / 60);
     const seconds = diffInSec % 60;
-    return `${minutes}分${seconds}秒`;
+    
+    return {
+      text: `${minutes}分${seconds}秒`,
+      isUrgent: minutes >= 10, // 10分以上でフラグを立てる
+    };
   };
 
   const cookingOrdersByTable = orders
@@ -91,45 +94,47 @@ function OrderList() {
     <div className={styles.container}>
       <h2 className={styles.sectionTitle}>🔥 調理待ち（テーブル別）</h2>
       <div className={styles.tableGrid}>
-        {Object.keys(cookingOrdersByTable).map((tableNo) => (
-          <div key={tableNo} className={styles.tableCard}>
-            <h3 className={styles.tableHeader}>{tableNo} 番テーブル</h3>
-            
-            <div className={styles.itemTableHeader}>
-              <span>商品名</span>
-              <span>個数</span>
-              <span>操作</span>
-            </div>
+        {Object.keys(cookingOrdersByTable).map((tableNo) => {
+          const timeInfo = getElapsedTimeInfo(cookingOrdersByTable[tableNo].firstOrderTime);
+          
+          return (
+            <div key={tableNo} className={styles.tableCard}>
+              <h3 className={styles.tableHeader}>{tableNo} 番テーブル</h3>
+              
+              <div className={styles.itemTableHeader}>
+                <span>商品名</span>
+                <span>個数</span>
+                <span>操作</span>
+              </div>
 
-            <ul className={styles.itemList}>
-              {Object.keys(cookingOrdersByTable[tableNo].items).map((itemName) => (
-                <li key={itemName} className={styles.itemRow}>
-                  <span className={styles.itemName}>{itemName}</span>
-                  <span className={styles.itemCount}>
-                    {cookingOrdersByTable[tableNo].items[itemName].count}
-                  </span>
-                  <div className={styles.buttonWrapper}>
+              <ul className={styles.itemList}>
+                {Object.keys(cookingOrdersByTable[tableNo].items).map((itemName) => (
+                  <li key={itemName} className={styles.itemRow}>
+                    <span className={styles.itemName}>{itemName}</span>
+                    <span className={styles.itemCount}>
+                      {cookingOrdersByTable[tableNo].items[itemName].count}
+                    </span>
                     <button
                       className={styles.miniDoneButton}
                       onClick={() => handleCompleteGroup(cookingOrdersByTable[tableNo].items[itemName].ids)}
                     >
                       完了
                     </button>
-                  </div>
-                </li>
-              ))}
-            </ul>
+                  </li>
+                ))}
+              </ul>
 
-            <div className={styles.orderFooter}>
-              <span className={styles.orderTime}>
-                時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
-              </span>
-              <span className={styles.elapsedTime}>
-                経過: {getElapsedTime(cookingOrdersByTable[tableNo].firstOrderTime)}
-              </span>
+              <div className={styles.orderFooter}>
+                <span className={styles.orderTime}>
+                  時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
+                </span>
+                <span className={timeInfo.isUrgent ? styles.urgentTime : styles.elapsedTime}>
+                  経過: {timeInfo.text}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
