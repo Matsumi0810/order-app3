@@ -14,6 +14,8 @@ function MenuCard({ tableNo }) {
   const [cart, setCart] = useState([]);
   const [counts, setCounts] = useState({ 1: 1, 2: 1, 3: 1, 4: 1 });
   const [modal, setModal] = useState({ show: false, itemName: "" });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const handleCountChange = (id, delta) => {
     setCounts((prev) => ({
@@ -31,6 +33,7 @@ function MenuCard({ tableNo }) {
       newItems.push({ ...item, cartId: uniqueId });
     }
     setCart([...cart, ...newItems]);
+    setIsSuccess(false); // 新しく追加したら成功表示をリセット
     setModal({ show: true, itemName: `${item.name} x ${count}` });
   };
 
@@ -39,7 +42,9 @@ function MenuCard({ tableNo }) {
   };
 
   const submitOrder = async () => {
-    if (cart.length === 0) return;
+    if (cart.length === 0 || isSubmitting) return;
+    
+    setIsSubmitting(true);
     try {
       const promises = cart.map((item) =>
         addDoc(collection(db, "orders"), {
@@ -51,12 +56,21 @@ function MenuCard({ tableNo }) {
         }),
       );
       await Promise.all(promises);
-      alert("注文を送信しました！");
+      
       setCart([]);
-      setModal({ show: false, itemName: "" });
+      setIsSuccess(true);
+      
+      // 2秒後にモーダルを閉じる
+      setTimeout(() => {
+        setModal({ show: false, itemName: "" });
+        setIsSuccess(false);
+      }, 2000);
+
     } catch (e) {
       console.error("Firebase送信エラー: ", e);
-      alert("注文の送信に失敗しました。");
+      alert("送信に失敗しました。");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -75,17 +89,30 @@ function MenuCard({ tableNo }) {
       {modal.show && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
-            <p className={styles.modalText}>
-              <strong>{modal.itemName}</strong> をカートに入れました
-            </p>
-            <div className={styles.modalButtons}>
-              <button className={styles.continueButton} onClick={() => setModal({ show: false, itemName: "" })}>
-                追加で注文する
-              </button>
-              <button className={styles.directSubmitButton} onClick={() => submitOrder()}>
-                このまま注文を確定
-              </button>
-            </div>
+            {!isSuccess ? (
+              <>
+                <p className={styles.modalText}>
+                  <strong>{modal.itemName}</strong> を追加しました
+                </p>
+                <div className={styles.modalButtons}>
+                  <button className={styles.continueButton} onClick={() => setModal({ show: false, itemName: "" })}>
+                    追加で注文する
+                  </button>
+                  <button 
+                    className={styles.directSubmitButton} 
+                    onClick={submitOrder}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? "送信中..." : "このまま注文を確定"}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <div className={styles.successMessage}>
+                <div className={styles.checkIcon}>✅</div>
+                <p>注文完了しました！</p>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -124,12 +151,16 @@ function MenuCard({ tableNo }) {
                 <li key={item.name} className={styles.cartItem}>
                   <span className={styles.cartItemName}>{item.name}</span>
                   <span className={styles.cartItemCount}>x {item.count}</span>
-                  <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>全部消す</button>
+                  <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>消す</button>
                 </li>
               ))}
             </ul>
-            <button className={styles.submitOrderButton} onClick={() => submitOrder()}>
-              合計 {totalPrice.toLocaleString()}円を注文する
+            <button 
+              className={isSuccess ? styles.successOrderButton : styles.submitOrderButton} 
+              onClick={submitOrder}
+              disabled={isSubmitting || isSuccess}
+            >
+              {isSuccess ? "注文完了！" : `合計 ${totalPrice.toLocaleString()}円を注文`}
             </button>
           </>
         )}
