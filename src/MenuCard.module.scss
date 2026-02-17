@@ -142,7 +142,7 @@
 
 .cartHeader {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 100px 1fr;
   font-size: 0.8rem;
   font-weight: bold;
   color: #888;
@@ -155,13 +155,29 @@
 
 .cartItem {
   display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
+  grid-template-columns: 2fr 100px 1fr;
   align-items: center;
   padding: 12px 0;
   border-bottom: 1px solid #f9f9f9;
   text-align: center;
   .cartItemName { text-align: left; font-weight: bold; font-size: 0.9rem; }
-  .cartItemCount { font-weight: bold; color: #2196f3; }
+}
+
+.cartCounter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  button {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    background: #f8f8f8;
+    font-size: 0.8rem;
+    line-height: 1;
+  }
+  span { font-weight: bold; color: #2196f3; min-width: 15px; }
 }
 
 .deleteButton {
