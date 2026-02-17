@@ -5,6 +5,12 @@
   min-height: 100vh;
 }
 
+.sectionTitle {
+  margin: 20px 0;
+  font-size: 1.5rem;
+  color: #333;
+}
+
 .tableGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -47,6 +53,9 @@
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.8rem;
+    &:hover {
+      background-color: #45a049;
+    }
   }
 }
 
@@ -55,11 +64,39 @@
   padding: 15px;
   border-radius: 8px;
   opacity: 0.8;
+  list-style: none;
 }
 
 .historyItem {
   font-size: 0.9rem;
   color: #666;
   border-bottom: 1px solid #eee;
-  padding: 5px 0;
+  padding: 8px 0;
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.expandButton {
+  display: block;
+  margin: 20px auto;
+  padding: 10px 20px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 20px;
+  color: #666;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+
+  &:hover {
+    background-color: #f8f9fa;
+    border-color: #bbb;
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
 }
