@@ -12,6 +12,7 @@ import styles from "./OrderList.module.scss";
 
 function OrderList() {
   const [orders, setOrders] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     const q = query(collection(db, "orders"), orderBy("createdAt", "asc"));
@@ -34,7 +35,6 @@ function OrderList() {
     }
   };
 
-  // 調理中の注文をテーブルごとにグループ化する
   const cookingOrdersByTable = orders
     .filter((order) => order.status === "cooking")
     .reduce((groups, order) => {
@@ -46,12 +46,12 @@ function OrderList() {
       return groups;
     }, {});
 
-  // 完了した注文（履歴用）
-  const doneOrders = orders.filter((order) => order.status === "done");
+  const doneOrders = orders.filter((order) => order.status === "done").reverse();
+  const displayOrders = isExpanded ? doneOrders : doneOrders.slice(0, 5);
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.sectionTitle}>🔥 調理待ち（テーブル別）</h2>
+      <h2 className={styles.sectionTitle}>調理待ち</h2>
 
       <div className={styles.tableGrid}>
         {Object.keys(cookingOrdersByTable).map((tableNo) => (
@@ -74,17 +74,23 @@ function OrderList() {
         ))}
       </div>
 
-      <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
+      <h2 className={styles.sectionTitle}>最近完了した注文</h2>
       <ul className={styles.historyList}>
-        {doneOrders
-          .slice(-10)
-          .reverse()
-          .map((order) => (
-            <li key={order.id} className={styles.historyItem}>
-              {order.tableNo}: {order.itemName}
-            </li>
-          ))}
+        {displayOrders.map((order) => (
+          <li key={order.id} className={styles.historyItem}>
+            {order.tableNo} 番テーブル: {order.itemName}
+          </li>
+        ))}
       </ul>
+
+      {doneOrders.length > 5 && (
+        <button 
+          className={styles.expandButton} 
+          onClick={() => setIsExpanded(!isExpanded)}
+        >
+          {isExpanded ? "閉じる ▲" : `もっと見る (${doneOrders.length - 5}件) ＋`}
+        </button>
+      )}
     </div>
   );
 }
