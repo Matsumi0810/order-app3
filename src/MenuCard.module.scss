@@ -1,177 +1,217 @@
-import { useState } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "./firebase";
-import styles from "./MenuCard.module.scss";
-
-const menuItems = [
-  { id: 1, name: "オムライス", price: 850 },
-  { id: 2, name: "カレーライス", price: 750 },
-  { id: 3, name: "アイスコーヒー", price: 400 },
-  { id: 4, name: "パンケーキ", price: 900 },
-];
-
-function MenuCard({ tableNo }) {
-  const [cart, setCart] = useState([]);
-  const [counts, setCounts] = useState({ 1: 1, 2: 1, 3: 1, 4: 1 });
-  const [addedItemId, setAddedItemId] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-
-  const handleCountChange = (id, delta) => {
-    setCounts((prev) => ({
-      ...prev,
-      [id]: Math.max(1, (prev[id] || 1) + delta),
-    }));
-  };
-
-  const addToCart = (item) => {
-    const count = counts[item.id] || 1;
-    const newItems = [];
-    for (let i = 0; i < count; i++) {
-      const randomStr = Math.random().toString(36).slice(2);
-      const uniqueId = `${Date.now()}-${randomStr}-${i}`;
-      newItems.push({ ...item, cartId: uniqueId });
-    }
-    setCart([...cart, ...newItems]);
-    setIsSuccess(false);
-
-    setAddedItemId(item.id);
-    setTimeout(() => {
-      setAddedItemId(null);
-    }, 2000);
-  };
-
-  const updateCartItemCount = (itemName, delta) => {
-    if (delta > 0) {
-      const itemToClone = cart.find((item) => item.name === itemName);
-      if (itemToClone) {
-        const uniqueId = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-        setCart([...cart, { ...itemToClone, cartId: uniqueId }]);
-      }
-    } else {
-      const indexToRemove = cart.findLastIndex((item) => item.name === itemName);
-      if (indexToRemove !== -1) {
-        const newCart = [...cart];
-        newCart.splice(indexToRemove, 1);
-        setCart(newCart);
-      }
-    }
-  };
-
-  const removeFromCart = (itemName) => {
-    setCart(cart.filter((item) => item.name !== itemName));
-  };
-
-  const submitOrder = async () => {
-    if (cart.length === 0 || isSubmitting) return;
-    
-    setIsSubmitting(true);
-    try {
-      const promises = cart.map((item) =>
-        addDoc(collection(db, "orders"), {
-          itemName: item.name,
-          price: item.price,
-          status: "cooking",
-          tableNo: tableNo,
-          createdAt: serverTimestamp(),
-        }),
-      );
-      await Promise.all(promises);
-      
-      setCart([]);
-      setCounts({ 1: 1, 2: 1, 3: 1, 4: 1 });
-      setIsSuccess(true);
-      
-      setTimeout(() => {
-        setIsSuccess(false);
-      }, 3000);
-
-    } catch (e) {
-      console.error("Firebase送信エラー: ", e);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const groupedCart = cart.reduce((acc, item) => {
-    if (!acc[item.name]) {
-      acc[item.name] = { ...item, count: 0, subtotal: 0 };
-    }
-    acc[item.name].count += 1;
-    acc[item.name].subtotal += item.price;
-    return acc;
-  }, {});
-
-  const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
-
-  return (
-    <div className={styles.menuContainer}>
-      <h2 className={styles.menuTitle}>お食事メニュー</h2>
-      <div className={styles.menuGrid}>
-        {menuItems.map((item) => (
-          <div key={item.id} className={styles.menuCard}>
-            <h3 className={styles.itemName}>{item.name}</h3>
-            <p className={styles.itemPrice}>{item.price.toLocaleString()}円</p>
-            <div className={styles.counter}>
-              <button onClick={() => handleCountChange(item.id, -1)}>−</button>
-              <span>{counts[item.id] || 1}</span>
-              <button onClick={() => handleCountChange(item.id, 1)}>+</button>
-            </div>
-            <button 
-              className={addedItemId === item.id ? styles.addedButton : styles.orderButton} 
-              onClick={() => addToCart(item)}
-            >
-              {addedItemId === item.id ? "追加完了！" : "カートに入れる"}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div className={styles.cartSection}>
-        <h2 className={styles.cartTitle}>現在のカート内容</h2>
-        {cart.length === 0 ? (
-          <p style={{ textAlign: "center", color: "#999", padding: "20px" }}>カートは空です</p>
-        ) : (
-          <>
-            <div className={styles.cartHeader}>
-              <span className={styles.headName}>商品名</span>
-              <span className={styles.headQty}>数量</span>
-              <span className={styles.headPrice}>金額</span>
-              <span className={styles.headAction}>操作</span>
-            </div>
-            <ul className={styles.cartList}>
-              {Object.values(groupedCart).map((item) => (
-                <li key={item.name} className={styles.cartItem}>
-                  <div className={styles.cartItemMain}>
-                    <span className={styles.cartItemName}>{item.name}</span>
-                  </div>
-                  <div className={styles.cartItemSub}>
-                    <div className={styles.cartCounter}>
-                      <button onClick={() => updateCartItemCount(item.name, -1)}>−</button>
-                      <span className={styles.countNum}>{item.count}</span>
-                      <button onClick={() => updateCartItemCount(item.name, 1)}>+</button>
-                    </div>
-                    <span className={styles.cartItemSubtotal}>{item.subtotal.toLocaleString()}円</span>
-                    <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>消す</button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-            <div className={styles.cartFooter}>
-              <div className={styles.totalLabel}>合計金額: {totalPrice.toLocaleString()}円</div>
-              <button 
-                className={isSuccess ? styles.successOrderButton : styles.submitOrderButton} 
-                onClick={submitOrder}
-                disabled={isSubmitting || isSuccess}
-              >
-                {isSubmitting ? "送信中..." : isSuccess ? "注文完了しました！" : "注文を確定する"}
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
+.menuContainer {
+  padding: 10px;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
-export default MenuCard;
+.menuTitle {
+  font-size: 1.2rem;
+  margin: 20px 0 15px;
+  text-align: center;
+}
+
+.menuGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+  margin-bottom: 30px;
+}
+
+.menuCard {
+  background: white;
+  padding: 12px;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  text-align: center;
+  .itemName { font-size: 0.95rem; margin-bottom: 5px; }
+  .itemPrice { color: #e91e63; font-weight: bold; margin-bottom: 10px; font-size: 0.85rem; }
+}
+
+.counter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  button {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #ddd;
+    background: white;
+    cursor: pointer;
+  }
+  span { font-weight: bold; min-width: 20px; }
+}
+
+.orderButton, .addedButton {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.orderButton { background: #2196f3; color: white; }
+.addedButton { background: #ff5252; color: white; animation: pulse 0.3s; }
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* カートセクションのレスポンシブ対応 */
+.cartSection {
+  background: #fff;
+  border-radius: 15px;
+  border: 1px solid #eee;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.cartTitle { 
+  font-size: 1.1rem; 
+  padding: 15px; 
+  margin: 0; 
+  background: #fafafa;
+  border-bottom: 1px solid #eee;
+}
+
+.cartHeader {
+  display: none; // スマホではヘッダーを非表示（2段構成にするため）
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 2fr 120px 100px 80px;
+    padding: 10px 20px;
+    background: #f8f8f8;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: #888;
+    text-align: center;
+  }
+}
+
+.cartList { list-style: none; padding: 0; margin: 0; }
+
+.cartItem {
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  flex-direction: column; // スマホでは縦並び
+  gap: 10px;
+
+  @media (min-width: 768px) {
+    flex-direction: row; // PCでは横並び
+    align-items: center;
+    padding: 12px 20px;
+  }
+}
+
+.cartItemMain {
+  @media (min-width: 768px) { flex: 2; }
+}
+
+.cartItemName {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #333;
+}
+
+.cartItemSub {
+  display: flex;
+  justify-content: space-between; // スマホでは要素を分散
+  align-items: center;
+  gap: 10px;
+
+  @media (min-width: 768px) {
+    flex: none;
+    width: 300px; // PCでは固定幅に収める
+    justify-content: flex-end;
+    gap: 30px;
+  }
+}
+
+.cartCounter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  button {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    background: #fdfdfd;
+    font-size: 1.1rem;
+  }
+  .countNum { 
+    font-weight: bold; 
+    color: #2196f3; 
+    min-width: 20px; 
+    text-align: center;
+  }
+}
+
+.cartItemSubtotal {
+  font-weight: bold;
+  color: #e91e63;
+  font-size: 0.95rem;
+  min-width: 70px;
+  text-align: right;
+}
+
+.deleteButton {
+  background: #fff;
+  color: #ff5252;
+  border: 1px solid #ff5252;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  &:active { background: #ff5252; color: #fff; }
+  
+  @media (min-width: 768px) {
+    &:hover { background: #ff5252; color: #fff; }
+  }
+}
+
+.cartFooter {
+  padding: 20px;
+  background: #fafafa;
+  text-align: center;
+}
+
+.totalLabel {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 15px;
+  color: #333;
+}
+
+.submitOrderButton {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px;
+  background: #4caf50;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
+}
+
+.successOrderButton {
+  width: 100%;
+  max-width: 400px;
+  padding: 16px;
+  background: #8bc34a;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
