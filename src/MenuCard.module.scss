@@ -2,58 +2,69 @@
   padding: 20px;
   max-width: 800px;
   margin: 0 auto;
-  position: relative;
 }
 
-/* トースト通知 */
-.toast {
+/* ポップアップ（モーダル）のオーバーレイ */
+.overlay {
   position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #333;
-  color: white;
-  padding: 20px;
-  border-radius: 12px;
-  z-index: 1000;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-  width: 90%;
-  max-width: 400px;
-  text-align: center;
-  animation: slideDown 0.3s ease-out;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.6); // 画面を暗くする
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
 
-  .toastText {
-    margin-bottom: 15px;
+.modal {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 350px;
+  text-align: center;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+
+  .modalText {
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+    color: #333;
+    strong { color: #e91e63; }
   }
 
-  .toastButtons {
+  .modalButtons {
     display: flex;
-    gap: 10px;
-    justify-content: center;
+    flex-direction: column; // ボタンを縦に並べる
+    gap: 12px;
 
     button {
-      padding: 10px 15px;
-      border-radius: 5px;
+      padding: 14px;
+      border-radius: 8px;
       border: none;
       cursor: pointer;
       font-weight: bold;
+      font-size: 1rem;
     }
 
     .continueButton {
-      background: #666;
-      color: white;
+      background: #f0f0f0;
+      color: #333;
     }
 
-    .goCartButton {
-      background: #ff9800;
+    .directSubmitButton {
+      background: #4caf50;
       color: white;
+      box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
     }
   }
 }
 
-@keyframes slideDown {
-  from { top: -100px; opacity: 0; }
-  to { top: 20px; opacity: 1; }
+@keyframes popIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 
 /* メニューカード */
@@ -70,69 +81,53 @@
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
   text-align: center;
-
   .itemName { font-size: 1.1rem; margin-bottom: 5px; }
   .itemPrice { color: #e91e63; font-weight: bold; margin-bottom: 10px; }
 }
 
-/* カウンター */
 .counter {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 15px;
   margin-bottom: 15px;
-
   button {
-    width: 30px;
-    height: 30px;
+    width: 35px;
+    height: 35px;
     border-radius: 50%;
     border: 1px solid #ddd;
     background: white;
+    font-size: 1.2rem;
     cursor: pointer;
-    font-size: 1.2rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    &:active { background: #eee; }
   }
-  
-  span {
-    font-size: 1.2rem;
-    font-weight: bold;
-    min-width: 20px;
-  }
+  span { font-size: 1.2rem; font-weight: bold; }
 }
 
 .orderButton {
   width: 100%;
-  padding: 10px;
+  padding: 12px;
   background: #2196f3;
   color: white;
   border: none;
-  border-radius: 5px;
-  cursor: pointer;
+  border-radius: 8px;
   font-weight: bold;
 }
 
 /* カートセクション */
 .cartSection {
-  background: #fdfdfd;
+  background: #fff;
   padding: 20px;
   border-radius: 15px;
-  border: 2px dashed #ccc;
+  border: 1px solid #eee;
+  margin-top: 20px;
 }
 
 .cartList { list-style: none; padding: 0; margin-bottom: 20px; }
-
 .cartItem {
   display: flex;
   justify-content: space-between;
   padding: 10px 0;
   border-bottom: 1px solid #eee;
-  
-  .cartItemName { font-weight: bold; }
-  .cartItemPrice { margin-left: 10px; color: #666; }
 }
 
 .deleteButton {
@@ -141,7 +136,6 @@
   border: none;
   padding: 4px 8px;
   border-radius: 4px;
-  cursor: pointer;
 }
 
 .submitOrderButton {
@@ -151,8 +145,6 @@
   color: white;
   border: none;
   border-radius: 10px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: bold;
-  cursor: pointer;
-  box-shadow: 0 4px 10px rgba(76, 175, 80, 0.3);
 }
