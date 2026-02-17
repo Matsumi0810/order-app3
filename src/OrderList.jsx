@@ -15,7 +15,6 @@ function OrderList() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [now, setNow] = useState(new Date());
 
-  // 1秒ごとに現在時刻を更新する（経過時間の表示用）
   useEffect(() => {
     const timer = setInterval(() => {
       setNow(new Date());
@@ -48,7 +47,6 @@ function OrderList() {
     }
   };
 
-  // 時刻を「HH:mm」形式にする
   const formatTime = (timestamp) => {
     if (!timestamp) return "--:--";
     const date = timestamp.toDate();
@@ -58,7 +56,6 @@ function OrderList() {
     });
   };
 
-  // 経過時間を「分:秒」で計算する
   const getElapsedTime = (timestamp) => {
     if (!timestamp) return "0分0秒";
     const startTime = timestamp.toDate();
@@ -111,23 +108,24 @@ function OrderList() {
                   <span className={styles.itemCount}>
                     {cookingOrdersByTable[tableNo].items[itemName].count}
                   </span>
-                  <button
-                    className={styles.miniDoneButton}
-                    onClick={() => handleCompleteGroup(cookingOrdersByTable[tableNo].items[itemName].ids)}
-                  >
-                    完了
-                  </button>
+                  <div className={styles.buttonWrapper}>
+                    <button
+                      className={styles.miniDoneButton}
+                      onClick={() => handleCompleteGroup(cookingOrdersByTable[tableNo].items[itemName].ids)}
+                    >
+                      完了
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>
 
-            {/* オーダーの一番下に注文時刻と経過時間を表示 */}
             <div className={styles.orderFooter}>
               <span className={styles.orderTime}>
-                注文時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
+                時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
               </span>
               <span className={styles.elapsedTime}>
-                経過時間: {getElapsedTime(cookingOrdersByTable[tableNo].firstOrderTime)}
+                経過: {getElapsedTime(cookingOrdersByTable[tableNo].firstOrderTime)}
               </span>
             </div>
           </div>
@@ -138,7 +136,9 @@ function OrderList() {
       <ul className={styles.historyList}>
         {displayOrders.map((order) => (
           <li key={order.id} className={styles.historyItem}>
-            {order.tableNo} 番テーブル: {order.itemName} ({formatTime(order.createdAt)})
+            <span className={styles.historyTable}>{order.tableNo}</span>
+            <span className={styles.historyName}>{order.itemName}</span>
+            <span className={styles.historyTime}>{formatTime(order.createdAt)}</span>
           </li>
         ))}
       </ul>
