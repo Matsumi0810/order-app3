@@ -133,8 +133,9 @@
   100% { opacity: 1; }
 }
 
+/* 履歴セクションのスマホ対応 */
 .historyWrapper {
-  max-width: 550px;
+  max-width: 600px;
   margin: 0 auto;
   background: #fff;
   border-radius: 12px;
@@ -143,65 +144,105 @@
 }
 
 .historyHeader {
-  display: grid;
-  grid-template-columns: 80px 1fr 40px 60px;
-  gap: 10px;
-  padding: 10px 15px;
-  background: #f8f9fa;
-  font-size: 0.75rem;
-  font-weight: bold;
-  color: #888;
-  border-bottom: 2px solid #eee;
-  text-align: center;
+  display: none; // スマホでは見出しを隠す
+
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 100px 1fr 60px 80px;
+    gap: 10px;
+    padding: 10px 15px;
+    background: #f8f9fa;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #888;
+    border-bottom: 2px solid #eee;
+    text-align: center;
+  }
 }
 
 .historyList {
   list-style: none;
-  padding: 0 15px;
+  padding: 0;
   margin: 0;
 }
 
 .historyItem {
-  display: grid;
-  grid-template-columns: 80px 1fr 40px 60px;
-  gap: 10px;
-  align-items: center;
-  font-size: 0.85rem;
-  color: #555;
+  display: flex;
+  flex-direction: column; // スマホでは2段にするために縦に並べる
+  padding: 12px 15px;
   border-bottom: 1px solid #eee;
-  padding: 12px 0;
+  gap: 5px;
+
+  @media (min-width: 768px) {
+    display: grid;
+    grid-template-columns: 100px 1fr 60px 80px;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
   
   &:last-child { border-bottom: none; }
+}
 
-  .historyTable {
-    color: #888;
-    font-size: 0.75rem;
+.historyItemMain {
+  @media (min-width: 768px) {
+    grid-column: 2;
+    order: 2;
+  }
+}
+
+.historyName {
+  font-weight: bold;
+  font-size: 1rem;
+  color: #333;
+  display: block; // 商品名を1行まるまる使わせる
+  
+  @media (min-width: 768px) {
+    font-size: 0.9rem;
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
+}
 
-  .historyName {
-    font-weight: bold;
-    text-align: left;
-    color: #333;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+.historyItemSub {
+  display: flex;
+  justify-content: space-between; // スマホではテーブル名と時間を左右に飛ばす
+  align-items: center;
+  font-size: 0.75rem;
+  color: #888;
+
+  @media (min-width: 768px) {
+    display: contents; // PCでは親のGridに合わせる
   }
+}
 
-  .historyCount {
+.historyTable {
+  @media (min-width: 768px) {
+    grid-column: 1;
+    order: 1;
+    text-align: left;
+  }
+}
+
+.historyCount {
+  font-weight: bold;
+  color: #666;
+  @media (min-width: 768px) {
+    grid-column: 3;
+    order: 3;
     text-align: center;
-    font-weight: bold;
-    color: #666;
   }
+}
 
-  .historyTime {
-    color: #aaa;
+.historyTime {
+  color: #aaa;
+  @media (min-width: 768px) {
+    grid-column: 4;
+    order: 4;
     text-align: right;
-    font-size: 0.8rem;
-    font-variant-numeric: tabular-nums;
   }
 }
 
