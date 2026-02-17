@@ -22,30 +22,26 @@ function MenuCard({ tableNo }) {
     }));
   };
 
-  // カートに追加
   const addToCart = (item) => {
     const count = counts[item.id] || 1;
     const newItems = [];
-    
     for (let i = 0; i < count; i++) {
       const randomStr = Math.random().toString(36).slice(2);
       const uniqueId = `${Date.now()}-${randomStr}-${i}`;
       newItems.push({ ...item, cartId: uniqueId });
     }
-
     setCart([...cart, ...newItems]);
     setModal({ show: true, itemName: `${item.name} x ${count}` });
   };
 
-  const removeFromCart = (cartId) => {
-    setCart(cart.filter((item) => item.cartId !== cartId));
+  const removeFromCart = (itemName) => {
+    setCart(cart.filter((item) => item.name !== itemName));
   };
 
-  // 注文確定処理（引数で渡されたカート、または現在のカートを送信）
-  const submitOrder = async (orderItems = cart) => {
-    if (orderItems.length === 0) return;
+  const submitOrder = async () => {
+    if (cart.length === 0) return;
     try {
-      const promises = orderItems.map((item) =>
+      const promises = cart.map((item) =>
         addDoc(collection(db, "orders"), {
           itemName: item.name,
           price: item.price,
@@ -64,11 +60,18 @@ function MenuCard({ tableNo }) {
     }
   };
 
+  const groupedCart = cart.reduce((acc, item) => {
+    if (!acc[item.name]) {
+      acc[item.name] = { ...item, count: 0 };
+    }
+    acc[item.name].count += 1;
+    return acc;
+  }, {});
+
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
     <div className={styles.menuContainer}>
-      {/* 中央表示のポップアップ（モーダル） */}
       {modal.show && (
         <div className={styles.overlay}>
           <div className={styles.modal}>
@@ -76,16 +79,10 @@ function MenuCard({ tableNo }) {
               <strong>{modal.itemName}</strong> をカートに入れました
             </p>
             <div className={styles.modalButtons}>
-              <button 
-                className={styles.continueButton} 
-                onClick={() => setModal({ show: false, itemName: "" })}
-              >
+              <button className={styles.continueButton} onClick={() => setModal({ show: false, itemName: "" })}>
                 追加で注文する
               </button>
-              <button 
-                className={styles.directSubmitButton} 
-                onClick={() => submitOrder()}
-              >
+              <button className={styles.directSubmitButton} onClick={() => submitOrder()}>
                 このまま注文を確定
               </button>
             </div>
@@ -94,19 +91,16 @@ function MenuCard({ tableNo }) {
       )}
 
       <h2 className={styles.menuTitle}>お食事メニュー</h2>
-
       <div className={styles.menuGrid}>
         {menuItems.map((item) => (
           <div key={item.id} className={styles.menuCard}>
             <h3 className={styles.itemName}>{item.name}</h3>
             <p className={styles.itemPrice}>{item.price.toLocaleString()}円</p>
-            
             <div className={styles.counter}>
               <button onClick={() => handleCountChange(item.id, -1)}>−</button>
               <span>{counts[item.id] || 1}</span>
               <button onClick={() => handleCountChange(item.id, 1)}>+</button>
             </div>
-
             <button className={styles.orderButton} onClick={() => addToCart(item)}>
               カートに入れる
             </button>
@@ -120,19 +114,22 @@ function MenuCard({ tableNo }) {
           <p style={{ textAlign: "center", color: "#999" }}>カートは空です</p>
         ) : (
           <>
+            <div className={styles.cartHeader}>
+              <span>商品名</span>
+              <span>数量</span>
+              <span>操作</span>
+            </div>
             <ul className={styles.cartList}>
-              {cart.map((item) => (
-                <li key={item.cartId} className={styles.cartItem}>
-                  <div className={styles.cartItemInfo}>
-                    <span className={styles.cartItemName}>{item.name}</span>
-                    <span className={styles.cartItemPrice}>{item.price.toLocaleString()}円</span>
-                  </div>
-                  <button className={styles.deleteButton} onClick={() => removeFromCart(item.cartId)}>削除</button>
+              {Object.values(groupedCart).map((item) => (
+                <li key={item.name} className={styles.cartItem}>
+                  <span className={styles.cartItemName}>{item.name}</span>
+                  <span className={styles.cartItemCount}>x {item.count}</span>
+                  <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>全部消す</button>
                 </li>
               ))}
             </ul>
             <button className={styles.submitOrderButton} onClick={() => submitOrder()}>
-              カートの合計 {totalPrice.toLocaleString()}円を注文する
+              合計 {totalPrice.toLocaleString()}円を注文する
             </button>
           </>
         )}
