@@ -5,7 +5,6 @@ import {
   onSnapshot,
   orderBy,
   doc,
-  updateDoc,
   writeBatch,
 } from "firebase/firestore";
 import { db } from "./firebase";
@@ -27,6 +26,7 @@ function OrderList() {
     return () => unsubscribe();
   }, []);
 
+  // 同じ商品の全件を一度に「完了」にする処理
   const handleCompleteGroup = async (orderIds) => {
     try {
       const batch = writeBatch(db);
@@ -40,6 +40,7 @@ function OrderList() {
     }
   };
 
+  // 調理中の注文を「テーブル別」→「商品別」に集計する
   const cookingOrdersByTable = orders
     .filter((order) => order.status === "cooking")
     .reduce((groups, order) => {
@@ -60,16 +61,19 @@ function OrderList() {
 
   return (
     <div className={styles.container}>
-      <h2 className={styles.sectionTitle}>調理待ち</h2>
+      <h2 className={styles.sectionTitle}>🔥 調理待ち（テーブル別）</h2>
       <div className={styles.tableGrid}>
         {Object.keys(cookingOrdersByTable).map((tableNo) => (
           <div key={tableNo} className={styles.tableCard}>
             <h3 className={styles.tableHeader}>{tableNo} 番テーブル</h3>
+            
+            {/* 表のヘッダー */}
             <div className={styles.itemTableHeader}>
               <span>商品名</span>
               <span>個数</span>
               <span>操作</span>
             </div>
+
             <ul className={styles.itemList}>
               {Object.keys(cookingOrdersByTable[tableNo]).map((itemName) => (
                 <li key={itemName} className={styles.itemRow}>
@@ -88,7 +92,7 @@ function OrderList() {
         ))}
       </div>
 
-      <h2 className={styles.sectionTitle}>完了した注文</h2>
+      <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
       <ul className={styles.historyList}>
         {displayOrders.map((order) => (
           <li key={order.id} className={styles.historyItem}>
