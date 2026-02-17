@@ -13,6 +13,15 @@ import styles from "./OrderList.module.scss";
 function OrderList() {
   const [orders, setOrders] = useState([]);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [now, setNow] = useState(new Date());
+
+  // 1秒ごとに現在時刻を更新する（経過時間の表示用）
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setNow(new Date());
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const q = query(collection(db, "orders"), orderBy("createdAt", "asc"));
@@ -39,14 +48,25 @@ function OrderList() {
     }
   };
 
-  // 時刻を「HH:mm」形式に変換するヘルパー関数
+  // 時刻を「HH:mm」形式にする
   const formatTime = (timestamp) => {
     if (!timestamp) return "--:--";
-    const date = timestamp.toDate(); // FirebaseのTimestampをDateオブジェクトに変換
+    const date = timestamp.toDate();
     return date.toLocaleTimeString("ja-JP", {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  // 経過時間を「分:秒」で計算する
+  const getElapsedTime = (timestamp) => {
+    if (!timestamp) return "0分0秒";
+    const startTime = timestamp.toDate();
+    const diffInMs = now - startTime;
+    const diffInSec = Math.floor(diffInMs / 1000);
+    const minutes = Math.floor(diffInSec / 60);
+    const seconds = diffInSec % 60;
+    return `${minutes}分${seconds}秒`;
   };
 
   const cookingOrdersByTable = orders
@@ -56,16 +76,14 @@ function OrderList() {
       if (!groups[table]) {
         groups[table] = {
           items: {},
-          firstOrderTime: order.createdAt, // そのテーブルの最初の注文時刻を保持
+          firstOrderTime: order.createdAt,
         };
       }
-      
       if (!groups[table].items[order.itemName]) {
         groups[table].items[order.itemName] = { ids: [], count: 0 };
       }
       groups[table].items[order.itemName].ids.push(order.id);
       groups[table].items[order.itemName].count += 1;
-      
       return groups;
     }, {});
 
@@ -78,12 +96,7 @@ function OrderList() {
       <div className={styles.tableGrid}>
         {Object.keys(cookingOrdersByTable).map((tableNo) => (
           <div key={tableNo} className={styles.tableCard}>
-            <div className={styles.tableCardHeader}>
-              <h3 className={styles.tableHeader}>{tableNo} 番テーブル</h3>
-              <span className={styles.orderTime}>
-                注文時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
-              </span>
-            </div>
+            <h3 className={styles.tableHeader}>{tableNo} 番テーブル</h3>
             
             <div className={styles.itemTableHeader}>
               <span>商品名</span>
@@ -107,6 +120,16 @@ function OrderList() {
                 </li>
               ))}
             </ul>
+
+            {/* オーダーの一番下に注文時刻と経過時間を表示 */}
+            <div className={styles.orderFooter}>
+              <span className={styles.orderTime}>
+                注文時刻 {formatTime(cookingOrdersByTable[tableNo].firstOrderTime)}
+              </span>
+              <span className={styles.elapsedTime}>
+                経過時間: {getElapsedTime(cookingOrdersByTable[tableNo].firstOrderTime)}
+              </span>
+            </div>
           </div>
         ))}
       </div>
