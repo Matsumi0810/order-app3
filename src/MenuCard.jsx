@@ -13,7 +13,7 @@ const menuItems = [
 function MenuCard({ tableNo }) {
   const [cart, setCart] = useState([]);
   const [counts, setCounts] = useState({ 1: 1, 2: 1, 3: 1, 4: 1 });
-  const [toast, setToast] = useState({ show: false, itemName: "" });
+  const [modal, setModal] = useState({ show: false, itemName: "" });
 
   const handleCountChange = (id, delta) => {
     setCounts((prev) => ({
@@ -22,6 +22,7 @@ function MenuCard({ tableNo }) {
     }));
   };
 
+  // カートに追加
   const addToCart = (item) => {
     const count = counts[item.id] || 1;
     const newItems = [];
@@ -33,21 +34,18 @@ function MenuCard({ tableNo }) {
     }
 
     setCart([...cart, ...newItems]);
-    setToast({ show: true, itemName: `${item.name} x ${count}` });
-
-    setTimeout(() => {
-      setToast({ show: false, itemName: "" });
-    }, 5000);
+    setModal({ show: true, itemName: `${item.name} x ${count}` });
   };
 
   const removeFromCart = (cartId) => {
     setCart(cart.filter((item) => item.cartId !== cartId));
   };
 
-  const submitOrder = async () => {
-    if (cart.length === 0) return;
+  // 注文確定処理（引数で渡されたカート、または現在のカートを送信）
+  const submitOrder = async (orderItems = cart) => {
+    if (orderItems.length === 0) return;
     try {
-      const promises = cart.map((item) =>
+      const promises = orderItems.map((item) =>
         addDoc(collection(db, "orders"), {
           itemName: item.name,
           price: item.price,
@@ -59,27 +57,38 @@ function MenuCard({ tableNo }) {
       await Promise.all(promises);
       alert("注文を送信しました！");
       setCart([]);
+      setModal({ show: false, itemName: "" });
     } catch (e) {
       console.error("Firebase送信エラー: ", e);
       alert("注文の送信に失敗しました。");
     }
   };
 
-  const scrollToCart = () => {
-    setToast({ show: false, itemName: "" });
-    document.getElementById("cart-section")?.scrollIntoView({ behavior: "smooth" });
-  };
-
   const totalPrice = cart.reduce((sum, item) => sum + item.price, 0);
 
   return (
     <div className={styles.menuContainer}>
-      {toast.show && (
-        <div className={styles.toast}>
-          <p className={styles.toastText}><strong>{toast.itemName}</strong> をカートに入れました</p>
-          <div className={styles.toastButtons}>
-            <button className={styles.continueButton} onClick={() => setToast({ show: false, itemName: "" })}>注文を続ける</button>
-            <button className={styles.goCartButton} onClick={scrollToCart}>注文を確定する</button>
+      {/* 中央表示のポップアップ（モーダル） */}
+      {modal.show && (
+        <div className={styles.overlay}>
+          <div className={styles.modal}>
+            <p className={styles.modalText}>
+              <strong>{modal.itemName}</strong> をカートに入れました
+            </p>
+            <div className={styles.modalButtons}>
+              <button 
+                className={styles.continueButton} 
+                onClick={() => setModal({ show: false, itemName: "" })}
+              >
+                追加で注文する
+              </button>
+              <button 
+                className={styles.directSubmitButton} 
+                onClick={() => submitOrder()}
+              >
+                このまま注文を確定
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -105,8 +114,8 @@ function MenuCard({ tableNo }) {
         ))}
       </div>
 
-      <div id="cart-section" className={styles.cartSection}>
-        <h2 className={styles.cartTitle}>注文を確認する</h2>
+      <div className={styles.cartSection}>
+        <h2 className={styles.cartTitle}>現在のカート内容</h2>
         {cart.length === 0 ? (
           <p style={{ textAlign: "center", color: "#999" }}>カートは空です</p>
         ) : (
@@ -122,8 +131,8 @@ function MenuCard({ tableNo }) {
                 </li>
               ))}
             </ul>
-            <button className={styles.submitOrderButton} onClick={submitOrder}>
-              合計 {totalPrice.toLocaleString()}円を注文する
+            <button className={styles.submitOrderButton} onClick={() => submitOrder()}>
+              カートの合計 {totalPrice.toLocaleString()}円を注文する
             </button>
           </>
         )}
