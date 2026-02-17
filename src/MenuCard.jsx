@@ -13,7 +13,7 @@ const menuItems = [
 function MenuCard({ tableNo }) {
   const [cart, setCart] = useState([]);
   const [counts, setCounts] = useState({ 1: 1, 2: 1, 3: 1, 4: 1 });
-  const [modal, setModal] = useState({ show: false, itemName: "" });
+  const [addedItemId, setAddedItemId] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
@@ -34,7 +34,11 @@ function MenuCard({ tableNo }) {
     }
     setCart([...cart, ...newItems]);
     setIsSuccess(false);
-    setModal({ show: true, itemName: `${item.name} x ${count}` });
+
+    setAddedItemId(item.id);
+    setTimeout(() => {
+      setAddedItemId(null);
+    }, 2000);
   };
 
   const updateCartItemCount = (itemName, delta) => {
@@ -79,9 +83,8 @@ function MenuCard({ tableNo }) {
       setIsSuccess(true);
       
       setTimeout(() => {
-        setModal({ show: false, itemName: "" });
         setIsSuccess(false);
-      }, 2000);
+      }, 3000);
 
     } catch (e) {
       console.error("Firebase送信エラー: ", e);
@@ -92,9 +95,10 @@ function MenuCard({ tableNo }) {
 
   const groupedCart = cart.reduce((acc, item) => {
     if (!acc[item.name]) {
-      acc[item.name] = { ...item, count: 0 };
+      acc[item.name] = { ...item, count: 0, subtotal: 0 };
     }
     acc[item.name].count += 1;
+    acc[item.name].subtotal += item.price;
     return acc;
   }, {});
 
@@ -102,37 +106,6 @@ function MenuCard({ tableNo }) {
 
   return (
     <div className={styles.menuContainer}>
-      {modal.show && (
-        <div className={styles.overlay}>
-          <div className={styles.modal}>
-            {!isSuccess ? (
-              <>
-                <p className={styles.modalText}>
-                  <strong>{modal.itemName}</strong> を追加しました
-                </p>
-                <div className={styles.modalButtons}>
-                  <button className={styles.continueButton} onClick={() => setModal({ show: false, itemName: "" })}>
-                    追加で注文する
-                  </button>
-                  <button 
-                    className={styles.directSubmitButton} 
-                    onClick={submitOrder}
-                    disabled={isSubmitting}
-                  >
-                    {isSubmitting ? "送信中..." : "このまま注文を確定"}
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className={styles.successMessage}>
-                <div className={styles.checkIcon}>✅</div>
-                <p>注文完了しました！</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
       <h2 className={styles.menuTitle}>お食事メニュー</h2>
       <div className={styles.menuGrid}>
         {menuItems.map((item) => (
@@ -144,8 +117,11 @@ function MenuCard({ tableNo }) {
               <span>{counts[item.id] || 1}</span>
               <button onClick={() => handleCountChange(item.id, 1)}>+</button>
             </div>
-            <button className={styles.orderButton} onClick={() => addToCart(item)}>
-              カートに入れる
+            <button 
+              className={addedItemId === item.id ? styles.addedButton : styles.orderButton} 
+              onClick={() => addToCart(item)}
+            >
+              {addedItemId === item.id ? "追加完了！" : "カートに入れる"}
             </button>
           </div>
         ))}
@@ -160,6 +136,7 @@ function MenuCard({ tableNo }) {
             <div className={styles.cartHeader}>
               <span>商品名</span>
               <span>数量</span>
+              <span>金額</span>
               <span>操作</span>
             </div>
             <ul className={styles.cartList}>
@@ -171,17 +148,21 @@ function MenuCard({ tableNo }) {
                     <span>{item.count}</span>
                     <button onClick={() => updateCartItemCount(item.name, 1)}>+</button>
                   </div>
+                  <span className={styles.cartItemSubtotal}>{item.subtotal.toLocaleString()}円</span>
                   <button className={styles.deleteButton} onClick={() => removeFromCart(item.name)}>消す</button>
                 </li>
               ))}
             </ul>
-            <button 
-              className={isSuccess ? styles.successOrderButton : styles.submitOrderButton} 
-              onClick={submitOrder}
-              disabled={isSubmitting || isSuccess}
-            >
-              {isSuccess ? "注文完了！" : `合計 ${totalPrice.toLocaleString()}円を注文`}
-            </button>
+            <div className={styles.cartFooter}>
+              <div className={styles.totalLabel}>合計金額: {totalPrice.toLocaleString()}円</div>
+              <button 
+                className={isSuccess ? styles.successOrderButton : styles.submitOrderButton} 
+                onClick={submitOrder}
+                disabled={isSubmitting || isSuccess}
+              >
+                {isSubmitting ? "送信中..." : isSuccess ? "注文完了しました！" : "注文を確定する"}
+              </button>
+            </div>
           </>
         )}
       </div>
