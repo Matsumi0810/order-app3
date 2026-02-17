@@ -1,0 +1,65 @@
+/* OrderList.module.scss */
+.container {
+  padding: 20px;
+  background-color: #f0f2f5;
+  min-height: 100vh;
+}
+
+.tableGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+  margin-bottom: 40px;
+}
+
+.tableCard {
+  background: white;
+  border-top: 5px solid #ff9800;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  padding: 15px;
+
+  .tableHeader {
+    margin: 0 0 15px 0;
+    font-size: 1.2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+  }
+}
+
+.itemList {
+  list-style: none;
+  padding: 0;
+}
+
+.itemRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #fafafa;
+
+  .miniDoneButton {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+  }
+}
+
+.historyList {
+  background: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  opacity: 0.8;
+}
+
+.historyItem {
+  font-size: 0.9rem;
+  color: #666;
+  border-bottom: 1px solid #eee;
+  padding: 5px 0;
+}
