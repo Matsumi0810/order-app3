@@ -1,24 +1,32 @@
 .container {
   padding: 10px;
-  background-color: #f0f2f5;
+  background-color: #f4f6f8;
   min-height: 100vh;
 }
 
 .sectionTitle {
-  margin: 15px 5px;
-  font-size: 1.2rem;
-  color: #333;
-  text-align: center;
+  margin: 25px 0 15px;
+  font-size: 1.1rem;
+  color: #444;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  &::before, &::after {
+    content: "";
+    height: 1px;
+    width: 30px;
+    background: #ccc;
+  }
 }
 
+/* 調理待ちカード */
 .tableGrid {
   display: grid;
   grid-template-columns: 1fr;
   gap: 15px;
-  margin-bottom: 30px;
-
   @media (min-width: 768px) {
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   }
 }
 
@@ -26,234 +34,138 @@
   background: white;
   border-top: 5px solid #ff9800;
   border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-  padding: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  padding: 15px;
 }
 
 .tableHeader {
-  margin: 0 0 10px 0;
+  margin: 0 0 12px 0;
   font-size: 1.1rem;
-  border-bottom: 2px solid #eee;
-  padding-bottom: 8px;
   text-align: center;
+  color: #333;
 }
 
 .itemTableHeader {
   display: grid;
-  grid-template-columns: 2fr 40px 60px;
-  gap: 10px;
+  grid-template-columns: 1fr 50px 70px;
   font-size: 0.75rem;
-  font-weight: bold;
-  color: #888;
-  padding: 5px 0;
+  color: #999;
+  padding-bottom: 5px;
   border-bottom: 1px solid #eee;
   text-align: center;
-}
-
-.itemList {
-  list-style: none;
-  padding: 0;
-  margin: 0;
 }
 
 .itemRow {
   display: grid;
-  grid-template-columns: 2fr 40px 60px;
-  gap: 10px;
+  grid-template-columns: 1fr 50px 70px;
   align-items: center;
-  padding: 10px 0;
-  border-bottom: 1px solid #fafafa;
-  text-align: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #f9f9f9;
+  .itemName { font-weight: bold; font-size: 0.95rem; }
+  .itemCount { text-align: center; font-weight: bold; color: #e91e63; font-size: 1.1rem; }
+}
 
-  .itemName {
-    text-align: left;
-    font-weight: bold;
-    font-size: 0.95rem;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .itemCount {
-    font-size: 1.1rem;
-    font-weight: bold;
-    color: #e91e63;
-  }
-
-  .miniDoneButton {
-    background-color: #4caf50;
-    color: white;
-    border: none;
-    padding: 8px 0;
-    width: 100%;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: bold;
-    cursor: pointer;
-    &:hover { background-color: #45a049; }
-  }
+.miniDoneButton {
+  background: #4caf50;
+  color: white;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: bold;
 }
 
 .orderFooter {
-  margin-top: 12px;
-  padding-top: 10px;
-  border-top: 1px dashed #ddd;
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  .elapsedTime { color: #ff5722; font-weight: bold; }
+}
+
+/* --- 完了履歴カード (ここを大幅変更) --- */
+.historyGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); // スマホで2列並び
+  gap: 10px;
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 15px;
+  }
+}
+
+.historyCard {
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #e0e0e0;
+  padding: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.04);
+  display: flex;
+  flex-direction: column;
+}
+
+.historyCardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-
-  .orderTime {
-    font-size: 0.75rem;
-    color: #777;
-  }
-
-  .elapsedTime {
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: #ff5722;
-    background: #fff3e0;
-    padding: 3px 8px;
-    border-radius: 4px;
-  }
-
-  .urgentTime {
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: #fff;
-    background: #ff5252;
-    padding: 3px 8px;
-    border-radius: 4px;
-    animation: blink 1s infinite;
-  }
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 6px;
+  margin-bottom: 8px;
 }
 
-@keyframes blink {
-  0% { opacity: 1; }
-  50% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-
-/* 履歴セクションのスマホ対応 */
-.historyWrapper {
-  max-width: 600px;
-  margin: 0 auto;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+.historyTableNo {
+  font-weight: bold;
+  font-size: 0.85rem;
+  color: #333;
+  white-space: nowrap;
   overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 60%;
 }
 
-.historyHeader {
-  display: none; // スマホでは見出しを隠す
-
-  @media (min-width: 768px) {
-    display: grid;
-    grid-template-columns: 100px 1fr 60px 80px;
-    gap: 10px;
-    padding: 10px 15px;
-    background: #f8f9fa;
-    font-size: 0.75rem;
-    font-weight: bold;
-    color: #888;
-    border-bottom: 2px solid #eee;
-    text-align: center;
-  }
+.historyTimeBadge {
+  font-size: 0.7rem;
+  color: #888;
+  background: #f0f0f0;
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
-.historyList {
+.historyItemList {
   list-style: none;
   padding: 0;
   margin: 0;
 }
 
-.historyItem {
+.historyItemRow {
   display: flex;
-  flex-direction: column; // スマホでは2段にするために縦に並べる
-  padding: 12px 15px;
-  border-bottom: 1px solid #eee;
-  gap: 5px;
-
-  @media (min-width: 768px) {
-    display: grid;
-    grid-template-columns: 100px 1fr 60px 80px;
-    flex-direction: row;
-    align-items: center;
-    gap: 10px;
-    text-align: center;
-  }
-  
-  &:last-child { border-bottom: none; }
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  line-height: 1.2;
 }
 
-.historyItemMain {
-  @media (min-width: 768px) {
-    grid-column: 2;
-    order: 2;
-  }
+.historyItemName {
+  color: #555;
+  word-break: break-all; // 長い名前も途中で折って表示
+  flex: 1;
+  padding-right: 5px;
 }
 
-.historyName {
+.historyItemCount {
   font-weight: bold;
-  font-size: 1rem;
-  color: #333;
-  display: block; // 商品名を1行まるまる使わせる
-  
-  @media (min-width: 768px) {
-    font-size: 0.9rem;
-    text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-}
-
-.historyItemSub {
-  display: flex;
-  justify-content: space-between; // スマホではテーブル名と時間を左右に飛ばす
-  align-items: center;
-  font-size: 0.75rem;
-  color: #888;
-
-  @media (min-width: 768px) {
-    display: contents; // PCでは親のGridに合わせる
-  }
-}
-
-.historyTable {
-  @media (min-width: 768px) {
-    grid-column: 1;
-    order: 1;
-    text-align: left;
-  }
-}
-
-.historyCount {
-  font-weight: bold;
-  color: #666;
-  @media (min-width: 768px) {
-    grid-column: 3;
-    order: 3;
-    text-align: center;
-  }
-}
-
-.historyTime {
-  color: #aaa;
-  @media (min-width: 768px) {
-    grid-column: 4;
-    order: 4;
-    text-align: right;
-  }
+  color: #999;
+  font-size: 0.8rem;
 }
 
 .expandButton {
   display: block;
   margin: 20px auto;
-  padding: 12px 25px;
-  background-color: #fff;
+  padding: 10px 20px;
+  background: none;
   border: 1px solid #ddd;
-  border-radius: 25px;
-  font-size: 0.9rem;
-  color: #666;
-  cursor: pointer;
+  border-radius: 20px;
+  color: #888;
+  font-size: 0.85rem;
 }
