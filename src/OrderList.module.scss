@@ -8,7 +8,7 @@
   margin: 15px 5px;
   font-size: 1.2rem;
   color: #333;
-  text-align: center; // タイトルも中央に
+  text-align: center;
 }
 
 .tableGrid {
@@ -133,24 +133,38 @@
   100% { opacity: 1; }
 }
 
-/* 完了履歴セクションの改善 */
-.historyList {
+.historyWrapper {
+  max-width: 550px;
+  margin: 0 auto;
   background: #fff;
-  padding: 0 15px;
   border-radius: 12px;
-  list-style: none;
   box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-  
-  /* 幅を狭めて中央に寄せる設定 */
-  max-width: 500px; 
-  margin: 0 auto; 
+  overflow: hidden;
+}
+
+.historyHeader {
+  display: grid;
+  grid-template-columns: 80px 1fr 40px 60px;
+  gap: 10px;
+  padding: 10px 15px;
+  background: #f8f9fa;
+  font-size: 0.75rem;
+  font-weight: bold;
+  color: #888;
+  border-bottom: 2px solid #eee;
+  text-align: center;
+}
+
+.historyList {
+  list-style: none;
+  padding: 0 15px;
+  margin: 0;
 }
 
 .historyItem {
   display: grid;
-  /* 左(テーブル): 80px固定 / 中(商品名): 自由 / 右(時間): 60px固定 */
-  grid-template-columns: 80px 1fr 60px;
-  gap: 15px;
+  grid-template-columns: 80px 1fr 40px 60px;
+  gap: 10px;
   align-items: center;
   font-size: 0.85rem;
   color: #555;
@@ -165,25 +179,29 @@
     text-align: left;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis; // テーブル名が長すぎる場合もケア
+    text-overflow: ellipsis;
   }
 
   .historyName {
     font-weight: bold;
-    text-align: left; // 左寄せの方が見やすい
+    text-align: left;
     color: #333;
-    
-    /* 長い商品名を見切る設定 */
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .historyCount {
+    text-align: center;
+    font-weight: bold;
+    color: #666;
   }
 
   .historyTime {
     color: #aaa;
     text-align: right;
     font-size: 0.8rem;
-    font-variant-numeric: tabular-nums; // 数字の幅を一定にする
+    font-variant-numeric: tabular-nums;
   }
 }
 
