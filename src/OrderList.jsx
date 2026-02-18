@@ -14,6 +14,8 @@ function OrderList() {
   const [orders, setOrders] = useState([]);
   const [isExpanded, setIsExpanded] = useState(false);
   const [now, setNow] = useState(new Date());
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [isBulkDelete, setIsBulkDelete] = useState(false);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,6 +46,35 @@ function OrderList() {
       await batch.commit();
     } catch (e) {
       console.error(e);
+    }
+  };
+
+  const handleDeleteGroup = async () => {
+    if (!deleteTarget) return;
+    try {
+      const batch = writeBatch(db);
+      deleteTarget.ids.forEach((id) => {
+        batch.delete(doc(db, "orders", id));
+      });
+      await batch.commit();
+      setDeleteTarget(null);
+    } catch (e) {
+      console.error("削除エラー:", e);
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    const doneOrders = orders.filter(o => o.status === "done");
+    if (doneOrders.length === 0) return;
+    try {
+      const batch = writeBatch(db);
+      doneOrders.forEach((order) => {
+        batch.delete(doc(db, "orders", order.id));
+      });
+      await batch.commit();
+      setIsBulkDelete(false);
+    } catch (e) {
+      console.error("一括削除エラー:", e);
     }
   };
 
@@ -98,6 +129,7 @@ function OrderList() {
           tableNo: table,
           time: timeStr,
           items: {},
+          ids: [],
           rawTime: order.createdAt ? order.createdAt.toDate() : new Date(0),
         };
       }
@@ -106,6 +138,7 @@ function OrderList() {
         groups[groupKey].items[order.itemName] = 0;
       }
       groups[groupKey].items[order.itemName] += 1;
+      groups[groupKey].ids.push(order.id);
       return groups;
     }, {});
 
@@ -158,7 +191,15 @@ function OrderList() {
         })}
       </div>
 
-      <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
+      <div className={styles.historySectionHeader}>
+        <h2 className={styles.sectionTitle}>✅ 最近完了した注文</h2>
+        {sortedDoneGroups.length > 0 && (
+          <button className={styles.bulkDeleteButton} onClick={() => setIsBulkDelete(true)}>
+            履歴を全件削除
+          </button>
+        )}
+      </div>
+
       <div className={styles.historyGrid}>
         {displayHistory.map((group, index) => (
           <div key={index} className={styles.historyCard}>
@@ -174,6 +215,12 @@ function OrderList() {
                 </li>
               ))}
             </ul>
+            <button 
+              className={styles.deleteIconButton} 
+              onClick={() => setDeleteTarget(group)}
+            >
+              削除
+            </button>
           </div>
         ))}
       </div>
@@ -182,6 +229,38 @@ function OrderList() {
         <button className={styles.expandButton} onClick={() => setIsExpanded(!isExpanded)}>
           {isExpanded ? "閉じる ▲" : `もっと見る (${sortedDoneGroups.length - 4}件) ＋`}
         </button>
+      )}
+
+      {deleteTarget && (
+        <div className={styles.overlay}>
+          <div className={styles.modal}>
+            <p className={styles.modalText}>
+              <strong>{deleteTarget.tableNo} 番テーブル</strong><br />
+              （{deleteTarget.time} の注文）を<br />
+              本当に削除しますか？
+            </p>
+            <div className={styles.modalButtons}>
+              <button className={styles.cancelButton} onClick={() => setDeleteTarget(null)}>いいえ</button>
+              <button className={styles.confirmButton} onClick={handleDeleteGroup}>はい</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isBulkDelete && (
+        <div className={styles.overlay}>
+          <div className={styles.modal}>
+            <p className={styles.modalText}>
+              <strong>履歴の全件削除</strong><br />
+              完了した注文データをすべて削除します。<br />
+              よろしいですか？
+            </p>
+            <div className={styles.modalButtons}>
+              <button className={styles.cancelButton} onClick={() => setIsBulkDelete(false)}>いいえ</button>
+              <button className={styles.confirmButton} onClick={handleBulkDelete}>すべて削除</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
