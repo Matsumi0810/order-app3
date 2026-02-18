@@ -20,7 +20,26 @@
   }
 }
 
-/* 調理待ちカード */
+.historySectionHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.bulkDeleteButton {
+  background-color: white;
+  color: #ff5252;
+  border: 1px solid #ff5252;
+  padding: 6px 15px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 15px;
+  &:hover { background: #fff5f5; }
+}
+
 .tableGrid {
   display: grid;
   grid-template-columns: 1fr;
@@ -83,10 +102,9 @@
   .elapsedTime { color: #ff5722; font-weight: bold; }
 }
 
-/* --- 完了履歴カード (ここを大幅変更) --- */
 .historyGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr); // スマホで2列並び
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   @media (min-width: 768px) {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -102,6 +120,7 @@
   box-shadow: 0 2px 5px rgba(0,0,0,0.04);
   display: flex;
   flex-direction: column;
+  position: relative;
 }
 
 .historyCardHeader {
@@ -135,6 +154,7 @@
   list-style: none;
   padding: 0;
   margin: 0;
+  flex: 1;
 }
 
 .historyItemRow {
@@ -148,7 +168,7 @@
 
 .historyItemName {
   color: #555;
-  word-break: break-all; // 長い名前も途中で折って表示
+  word-break: break-all;
   flex: 1;
   padding-right: 5px;
 }
@@ -157,6 +177,18 @@
   font-weight: bold;
   color: #999;
   font-size: 0.8rem;
+}
+
+.deleteIconButton {
+  margin-top: 10px;
+  background: none;
+  border: 1px solid #ff5252;
+  color: #ff5252;
+  border-radius: 4px;
+  padding: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  &:hover { background: #fff5f5; }
 }
 
 .expandButton {
@@ -169,3 +201,51 @@
   color: #888;
   font-size: 0.85rem;
 }
+
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 25px;
+  border-radius: 15px;
+  width: 90%;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+.modalText {
+  margin-bottom: 20px;
+  line-height: 1.6;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.modalButtons {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.cancelButton, .confirmButton {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  flex: 1;
+}
+
+.cancelButton { background: #eee; color: #666; }
+.confirmButton { background: #ff5252; color: white; }
